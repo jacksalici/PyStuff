@@ -1,23 +1,14 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
-name = "pytorch-dev-utils"
+name = "pystuff"
 version = "0.1.0"
-dependencies = []
-requires-python = ">=3.10"
+description = "A collection of utilities for PyTorch development."
+readme = "README.md"
 authors = [
-  {name = "Jack", email = "giacomo.salici@unimore.it"}
+    { name = "Jack Salici", email = "giacomo.salici@unimore.it" }
 ]
-description = "Colletion of utilities for debugging and developing Pytorch models."
-readme = "readme.md"
-license = "MIT"
-license-files = ["LICEN[CS]E.*"]
-keywords = ["pytorch", "debugging", "utils", "hooks", "logging"]
+requires-python = ">=3.11"
+dependencies = []
 
-[project.urls]
-Documentation = "https://github.com/jacksalici/PytorchDevUtils"
-Repository = "https://github.com/jacksalici/PytorchDevUtils.git"
-Issues = "https://github.com/jacksalici/PytorchDevUtils/issues"
-Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+[build-system]
+requires = ["uv_build>=0.10.0,<0.11.0"]
+build-backend = "uv_build"
