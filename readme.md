@@ -7,7 +7,6 @@
 
 - [Shape Hooks 🪝](#shape-hooks-🪝)
 - [Logger 📜](#logger-📜)
-- [Metrics 📊](#metrics-📊)
 - ... [WIP]
 
 ### Shape Hooks 🪝
@@ -54,12 +53,6 @@ logger.log({"message": "Model forward pass completed"}, log_level=Logger.LogLeve
     "message": "Model forward pass completed"
 }
 ```
-
-
-### Metrics 📊
-
-Wrapper for the most useful metrics. Work in progress.
-
 
 ## Installation 🚀
 
