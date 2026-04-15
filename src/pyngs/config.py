@@ -1,260 +1,124 @@
-"""
-Singleton configuration manager combining CLI argument parsing, YAML support,
-and automatic ``__init__`` injection via a class decorator.
-
-This module exposes a single ``Config`` class that acts as the central hub
-for all runtime configuration in a project.  It is designed to be used in
-three steps:
-
-1. **Registration** (import time) — decorate classes with
-   ``@Config.configurable``; their ``__init__`` parameters are registered as
-   namespaced ``argparse`` flags automatically.
-2. **Parsing** (entry point) — call ``Config.instance().parse_cli_args()``
-   once after all classes are imported.
-3. **Injection** (instantiation) — create decorated classes normally; missing
-   arguments are transparently filled from the parsed config.
-"""
+"""Singleton configuration with CLI parsing, YAML support, attribute access,
+and automatic __init__ injection via @Config.configurable."""
 
 import yaml
 import argparse
 import inspect
 import functools
-from typing import Any, Dict, List, Optional, Type
-import os, sys
+from typing import Any, Dict, Optional, Type
 
 
 class Config:
-    """Singleton configuration manager with CLI argument parsing and YAML support.
+    """Singleton config with argparse, YAML, and attribute-style access.
 
-    Combines argument registration, parsing, YAML loading, and a class decorator
-    that automatically wires ``__init__`` parameters to CLI flags — all in one place.
-
-    Typical usage::
-
-        @Config.configurable
-        class Trainer:
-            def __init__(self, lr=0.001, epochs=10):
-                self.lr = lr
-                self.epochs = epochs
-
-        # In the entry point:
-        Config.instance().parse_cli_args()
-        trainer = Trainer()  # lr/epochs filled from CLI or defaults
+    Access values via dot notation (cfg.lr), brackets (cfg["lr"]), or .get().
     """
 
     _instance: Optional['Config'] = None
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(Config, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self, log=None):
+    def __init__(self):
         if self._initialized:
             return
-
         self._initialized = True
         self.config: Dict[str, Any] = {}
-        self._parser = argparse.ArgumentParser(description="Application Configuration")
+        self._parser = argparse.ArgumentParser()
         self._parsed = False
         self._registered_prefixes: set = set()
-        self._log = log if log is not None else print
 
-    # ------------------------------------------------------------------
-    # Singleton access
-    # ------------------------------------------------------------------
+    # -- Singleton --------------------------------------------------------
 
     @classmethod
     def instance(cls) -> 'Config':
-        """Return the global singleton, creating it on first call."""
         return cls()
 
     @classmethod
     def reset(cls) -> 'Config':
-        """Reset and return a fresh singleton. Useful in tests."""
         cls._instance = None
-        cls._instance = cls()
-        return cls._instance
+        return cls()
 
-    # ------------------------------------------------------------------
-    # Argument registration
-    # ------------------------------------------------------------------
+    # -- Attribute / item access ------------------------------------------
 
-    def add_argument(self, name: str, default: Any = None, arg_type: type = str, help_text: str = "", **kwargs):
-        """Register a single typed CLI argument.
+    def __getattr__(self, key: str) -> Any:
+        config = self.__dict__.get('config')
+        if config is None:
+            raise AttributeError(key)
+        try:
+            return config[key]
+        except KeyError:
+            raise AttributeError(f"Config has no key '{key}'")
 
-        Args:
-            name: Flag name (without ``--`` prefix).
-            default: Default value when the flag is not provided.
-            arg_type: Type callable used by argparse to coerce the string value.
-            help_text: Description shown in ``--help`` output.
-            **kwargs: Additional keyword arguments passed to
-                      ``argparse.ArgumentParser.add_argument``.
-        """
-        self._parser.add_argument(f"--{name}", type=arg_type, default=default, help=help_text, **kwargs)
-        self.config[name] = default
+    def __getitem__(self, key: str) -> Any:
+        return self.config[key]
 
-    def add_arguments_from_dict(self, arguments: Dict[str, Dict[str, Any]]):
-        """Register multiple arguments from a mapping of name → kwargs.
+    def __setitem__(self, key: str, value: Any):
+        self.config[key] = value
 
-        Each value is unpacked as keyword arguments to :meth:`add_argument`::
+    def __contains__(self, key: str) -> bool:
+        return key in self.config
 
-            cfg.add_arguments_from_dict({
-                "lr":     {"default": 0.001, "arg_type": float},
-                "epochs": {"default": 10,    "arg_type": int},
-            })
-        """
-        for name, params in arguments.items():
-            self.add_argument(name, **params)
+    # -- Registration -----------------------------------------------------
 
-    # ------------------------------------------------------------------
-    # Parsing
-    # ------------------------------------------------------------------
+    def add_argument(self, name: str, *args, **kwargs):
+        self._parser.add_argument(
+            name, *args, **kwargs,
+        )
+
+    # -- Parsing ----------------------------------------------------------
 
     def parse_cli_args(self, args=None):
-        """Parse CLI arguments and store them in :attr:`config`.
-
-        Args:
-            args: Explicit list of strings to parse (defaults to ``sys.argv``).
-                  Pass an empty list ``[]`` in tests to avoid reading ``sys.argv``.
-        """
         parsed = self._parser.parse_args(args)
         self.config.update(vars(parsed))
         self._parsed = True
 
-    # ------------------------------------------------------------------
-    # YAML support
-    # ------------------------------------------------------------------
+    # -- YAML -------------------------------------------------------------
 
-    def load_from_yaml(self, yaml_path: str):
-        """Merge values from a YAML file into :attr:`config`.
-
-        Missing files produce a warning instead of raising an exception.
-        """
+    def load_from_yaml(self, path: str):
         try:
-            with open(yaml_path, 'r') as f:
-                yaml_data = yaml.safe_load(f) or {}
-                self.config.update(yaml_data)
+            with open(path) as f:
+                self.config.update(yaml.safe_load(f) or {})
         except FileNotFoundError:
-            self._log(f"Warning: Config file not found: {yaml_path}")
+            print(f"Warning: Config file not found: {path}")
 
-    def load_from_multiple_yamls(self, yaml_paths: List[str]):
-        """Merge values from multiple YAML files in order."""
-        for yaml_path in yaml_paths:
-            self.load_from_yaml(yaml_path)
-
-    def save_to_yaml(self, yaml_path: str):
-        """Persist the current :attr:`config` to a YAML file."""
-        with open(yaml_path, 'w') as f:
+    def save_to_yaml(self, path: str):
+        with open(path, 'w') as f:
             yaml.dump(self.config, f, default_flow_style=False)
 
-    # ------------------------------------------------------------------
-    # Value access and helpers
-    # ------------------------------------------------------------------
+    # -- Access helpers ---------------------------------------------------
 
     def get(self, key: str, default: Any = None) -> Any:
-        """Return a config value, falling back to *default* if absent."""
         return self.config.get(key, default)
 
-    def update_config(self, updates: Dict[str, Any]):
-        """Merge *updates* directly into :attr:`config`."""
+    def update(self, updates: Dict[str, Any]):
         self.config.update(updates)
 
-    def get_device(self) -> str:
-        """Return the best available compute device.
-
-        Reads the ``device`` key (``"auto"``, ``"cuda"``, or ``"mps"``).
-        Falls back to ``"cpu"`` when the requested accelerator is unavailable.
-        """
-        torch = sys.modules.get('torch')
-        if torch is None:
-            
-            return "cpu"
-
-        device = self.config.get("device", "auto")
-        if device in ["auto", "cuda"] and torch.cuda.is_available():
-            return "cuda"
-        if device in ["auto", "mps"] and torch.backends.mps.is_available():
-            return "mps"
-        return "cpu"
-
-    def ensure_directory(self, path: str):
-        """Create *path* (and any parents) if it does not already exist."""
-        if not os.path.exists(path):
-            os.makedirs(path)
-
-    def get_checkpoint_path(self) -> str:
-        """Return the resolved checkpoint file path, creating its directory.
-
-        Reads ``checkpoint_path``, ``checkpoint_name``, and ``model_name``
-        from :attr:`config`.
-        """
-        checkpoint_path = self.config.get("checkpoint_path", "checkpoints")
-        self.ensure_directory(checkpoint_path)
-        checkpoint_name = self.config.get("checkpoint_name", None)
-        model_name = self.config.get("model_name", "model")
-        if checkpoint_name:
-            return os.path.join(checkpoint_path, checkpoint_name)
-        return f"{os.path.join(checkpoint_path, model_name)}.pth"
-
-    # ------------------------------------------------------------------
-    # @Config.configurable decorator
-    # ------------------------------------------------------------------
+    # -- @configurable decorator ------------------------------------------
 
     @staticmethod
     def configurable(cls=None, *, prefix: Optional[str] = None):
-        """Class decorator that auto-registers ``__init__`` params as CLI args.
-
-        At **import time** (decoration), each ``__init__`` parameter (except
-        ``self``, ``*args``, ``**kwargs``) is registered as a namespaced CLI
-        flag on the singleton: ``--<prefix>.<name>``.
-
-        At **instantiation time**, any argument not explicitly supplied by the
-        caller is filled from the parsed config.  Explicit arguments always win.
-
-        Args:
-            cls: Set automatically when the decorator is used without
-                 parentheses (``@Config.configurable``).
-            prefix: Namespace for the CLI flags.  Defaults to the lowercase
-                    class name (e.g. ``Trainer`` → ``trainer``).
-
-        Raises:
-            ValueError: If the resolved prefix is already registered.
-
-        Usage::
-
-            @Config.configurable
-            class Trainer:
-                def __init__(self, lr=0.001, epochs=10):
-                    self.lr, self.epochs = lr, epochs
-
-            @Config.configurable(prefix="opt")
-            class Optimizer:
-                def __init__(self, lr=0.01):
-                    self.lr = lr
-
-            # CLI: python main.py --trainer.lr 0.1 --opt.lr 0.005
-        """
+        """Class decorator that auto-registers __init__ params as --<prefix>.<param> CLI args.
+        At instantiation, missing arguments are filled from the parsed config."""
 
         def wrap(klass: Type) -> Type:
             _prefix = prefix if prefix is not None else klass.__name__.lower()
             config = Config.instance()
 
             if _prefix in config._registered_prefixes:
-                raise ValueError(
-                    f"Config prefix '{_prefix}' is already registered. "
-                    f"Use @Config.configurable(prefix='...') to set a unique prefix."
-                )
+                raise ValueError(f"Config prefix '{_prefix}' already registered.")
             config._registered_prefixes.add(_prefix)
 
             sig = inspect.signature(klass.__init__)
             param_names = []
 
             for name, param in sig.parameters.items():
-                if name == 'self':
-                    continue
-                if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+                if name == 'self' or param.kind in (
+                    inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD,
+                ):
                     continue
                 param_names.append(name)
                 full_name = f"{_prefix}.{name}"
