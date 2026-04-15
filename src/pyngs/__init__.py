@@ -1,10 +1,10 @@
-from pystuff.config import Config
-from pystuff.logger import Logger
-from pystuff.shapehook import ShapeHook
+from pyngs.config import Config
+from pyngs.logger import Logger
+from pyngs.shapehook import ShapeHook
 from typing import Literal, Optional
 
 
-class PyStuff:
+class Pyngs:
     """Unified entry point that initialises Config and Logger together.
 
     Creates (or reuses) the global :class:`Config` singleton and a new
@@ -17,7 +17,7 @@ class PyStuff:
 
     Usage::
 
-        ps = PyStuff(
+        ps = Pyngs(
             project_name="my_exp",
             log_level="info",
             report_to="tb",
@@ -63,7 +63,7 @@ class PyStuff:
         )
         self.config._log = self.logger
 
-    def parse(self, args=None) -> 'PyStuff':
+    def parse(self, args=None) -> 'Pyngs':
         """Parse CLI arguments and return self for chaining.
 
         Args:
@@ -75,4 +75,4 @@ class PyStuff:
 
 
 def main() -> None:
-    print("Hello from pystuff!")
+    print("Hello from pyngs!")

@@ -1,11 +1,11 @@
-# pystuff — LLM Reference
+# pyngs — LLM Reference
 
 A personal Python toolkit for PyTorch development. Provides four public
-symbols: PyStuff (unified entry point), Config, Logger, ShapeHook.
+symbols: Pyngs (unified entry point), Config, Logger, ShapeHook.
 Not a production library — minimal, focused, and easy to extend.
 
-Repository: https://github.com/jacksalici/pystuff
-Package name: pystuff
+Repository: https://github.com/jacksalici/pyngs
+Package name: pyngs
 Python: >= 3.11
 Install: pip install -e . (from source, not on PyPI)
 
@@ -15,18 +15,18 @@ without PyTorch. ShapeHook.register_hooks raises ImportError if torch is
 absent. Config.get_device returns "cpu" silently if torch is absent.
 
 
-## Module: pystuff — PyStuff (recommended entry point)
+## Module: pyngs — Pyngs (recommended entry point)
 
 Unified initialiser that creates the Config singleton and a Logger singleton
 together under a shared project name.
 
 ### Import
 
-    from pystuff import PyStuff
+    from pyngs import Pyngs
 
 ### Constructor
 
-    PyStuff(
+    Pyngs(
         project_name: str,
         log_level: "debug" | "info" | "warning" | "error" = "info",
         report_to: "none" | "wb" | "tb" | "all" | None = None,
@@ -43,20 +43,20 @@ together under a shared project name.
 
 ### Methods
 
-    ps.parse(args=None) -> PyStuff
+    ps.parse(args=None) -> Pyngs
         Calls Config.instance().parse_cli_args(args). Returns self.
         Pass [] in tests to avoid reading sys.argv.
 
 ### Example
 
-    from pystuff import PyStuff, Config
+    from pyngs import Pyngs, Config
 
     @Config.configurable
     class Trainer:
         def __init__(self, lr=0.001, epochs=10):
             self.lr, self.epochs = lr, epochs
 
-    ps = PyStuff("my_exp", report_to="tb")
+    ps = Pyngs("my_exp", report_to="tb")
     ps.parse()                    # or ps.parse(["--trainer.lr", "0.1"])
     ps.logger("Training started")
     trainer = Trainer()           # lr/epochs injected from CLI
@@ -64,14 +64,14 @@ together under a shared project name.
     ps.logger.close()
 
 
-## Module: pystuff.shapehook — ShapeHook
+## Module: pyngs.shapehook — ShapeHook
 
 Singleton. Attaches PyTorch forward hooks that print input/output tensor
 shapes for every sub-module.
 
 ### Import
 
-    from pystuff import ShapeHook
+    from pyngs import ShapeHook
 
 ### Singleton access
 
@@ -104,7 +104,7 @@ shapes for every sub-module.
     model(torch.randn(1, 3, 32, 32))
 
 
-## Module: pystuff.logger — Logger
+## Module: pyngs.logger — Logger
 
 Singleton class. Wraps Python logging with optional Weights & Biases and
 TensorBoard integration. Log strings or metric dicts at severity levels.
@@ -112,7 +112,7 @@ Calling Logger() multiple times returns the same instance.
 
 ### Import
 
-    from pystuff import Logger
+    from pyngs import Logger
 
 ### Singleton access
 
@@ -160,7 +160,7 @@ Calling Logger() multiple times returns the same instance.
     logger.close()
 
 
-## Module: pystuff.config — Config
+## Module: pyngs.config — Config
 
 Singleton class. Central configuration manager combining:
 - CLI argument parsing (argparse)
@@ -170,7 +170,7 @@ Calling Config() multiple times returns the same instance.
 
 ### Import
 
-    from pystuff import Config
+    from pyngs import Config
 
 ### Singleton access
 
@@ -250,7 +250,7 @@ are filled from the parsed config; explicit arguments always win.
 ### Full example
 
     # my_classes.py
-    from pystuff import Config
+    from pyngs import Config
 
     @Config.configurable
     class Trainer:
@@ -265,7 +265,7 @@ are filled from the parsed config; explicit arguments always win.
 
     # main.py
     from my_classes import Trainer, Optimizer
-    from pystuff import Config
+    from pyngs import Config
 
     cfg = Config.instance()
     cfg.load_from_yaml("config.yaml")   # optional
@@ -279,8 +279,8 @@ are filled from the parsed config; explicit arguments always win.
 
 ## File layout
 
-    src/pystuff/
-        __init__.py      # exports: PyStuff, Config, Logger, ShapeHook
+    src/pyngs/
+        __init__.py      # exports: Pyngs, Config, Logger, ShapeHook
         config.py        # Config class (singleton + decorator)
         logger.py        # Logger class
         shapehook.py     # ShapeHook class (singleton)
@@ -294,7 +294,7 @@ are filled from the parsed config; explicit arguments always win.
 
 ## Key conventions
 
-- PyStuff is the recommended entry point; it wires Config and Logger together
+- Pyngs is the recommended entry point; it wires Config and Logger together
   under a shared project name with one constructor call.
 - torch is optional everywhere. No top-level torch import anywhere in the
   package. sys.modules.get('torch') is used at call time.

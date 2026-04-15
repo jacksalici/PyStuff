@@ -1,5 +1,5 @@
 [project]
-name = "pystuff"
+name = "pyngs"
 version = "0.1.1"
 description = "A collection of utilities for PyTorch development."
 readme = "readme.md"

@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 import os
-from pystuff.config import Config
+from pyngs.config import Config
 
 
 class TestConfig(unittest.TestCase):
@@ -49,7 +49,7 @@ class TestConfig(unittest.TestCase):
 
     def test_update_config(self):
         updates = {"new_key": "new_value"}
-        self.config.update_config(updates)
+        selngsfig.update_config(updates)
         self.assertEqual(self.config.get("new_key"), "new_value")
 
 
@@ -64,14 +64,14 @@ class TestConfigurable(unittest.TestCase):
             def __init__(self, lr=0.001, epochs=10):
                 self.lr = lr
                 self.epochs = epochs
-
+ngs
         cfg = Config.instance()
         cfg.parse_cli_args([])
 
         m = MyModel()
         self.assertEqual(m.lr, 0.001)
         self.assertEqual(m.epochs, 10)
-
+ngs
     def test_cli_overrides(self):
         @Config.configurable
         class Trainer:
@@ -104,7 +104,7 @@ class TestConfigurable(unittest.TestCase):
         class Trainer:
             def __init__(self, lr=0.001):
                 self.lr = lr
-
+ngs
         cfg = Config.instance()
         cfg.parse_cli_args(["--trainer.lr", "0.5"])
 
@@ -112,7 +112,7 @@ class TestConfigurable(unittest.TestCase):
         self.assertEqual(t.lr, 0.99)
 
     def test_custom_prefix(self):
-        @Config.configurable(prefix="opt")
+        @Congsconfigurable(prefix="opt")
         class Optimizer:
             def __init__(self, lr=0.01):
                 self.lr = lr
@@ -160,7 +160,7 @@ class TestConfigurable(unittest.TestCase):
         class Worker:
             def __init__(self, name):
                 self.name = name
-
+ngs
         cfg = Config.instance()
         cfg.parse_cli_args(["--worker.name", "alice"])
 
@@ -170,7 +170,7 @@ class TestConfigurable(unittest.TestCase):
     def test_param_without_default_not_provided_raises(self):
         @Config.configurable
         class Worker:
-            def __init__(self, name):
+           ngs__init__(self, name):
                 self.name = name
 
         cfg = Config.instance()
@@ -193,4 +193,4 @@ class TestConfigurable(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main()ngs

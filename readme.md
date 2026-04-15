@@ -1,4 +1,4 @@
-# pystuff 🧰
+# pyngs 🧰
 
 **A collection of utilities for debugging and developing PyTorch models.**
 
@@ -6,7 +6,7 @@
 
 ## Tools 🛠️
 
-- [PyStuff 🚀](#pystuff-) — unified entry point
+- [Pyngs 🚀](#pyngs-) — unified entry point
 - [Logger 📜](#logger-)
 - [Config ⚙️](#config-️)
 
@@ -16,14 +16,14 @@
 
 ---
 
-### PyStuff 🚀
+### Pyngs 🚀
 
 The recommended entry point. Initialises `Config` and `Logger` together under a single project name — no need to wire them separately.
 
 ```python
-from pystuff import PyStuff
+from pyngs import Pyngs
 
-ps = PyStuff(
+ps = Pyngs(
     project_name="my_exp",
     log_level="info",
     report_to="tb",             # optional: "none" | "wb" | "tb" | "all"
@@ -44,7 +44,7 @@ ps.logger                       # → Logger instance
 A **singleton** logging interface that combines Python's `logging` with optional **Weights & Biases** and **TensorBoard** integration. Log strings or metric dicts at different severity levels; only messages at or above the configured level reach the console. Calling `Logger()` multiple times returns the same instance.
 
 ```python
-from pystuff import Logger
+from pyngs import Logger
 
 logger = Logger(
     project_name="my_experiment",
@@ -84,7 +84,7 @@ A **singleton** configuration manager that combines **CLI argument parsing** (`a
 
 ```python
 # my_classes.py
-from pystuff import Config
+from pyngs import Config
 
 @Config.configurable
 class Trainer:
@@ -101,7 +101,7 @@ class Optimizer:
 ```python
 # main.py
 from my_classes import Trainer, Optimizer
-from pystuff import Config
+from pyngs import Config
 
 Config.instance().parse_cli_args()
 
@@ -151,7 +151,7 @@ cfg.parse_cli_args()
 Attaches forward hooks to every module in a PyTorch model and prints input/output tensor shapes on each forward pass. Hooks can be set to fire **once only** (`one_time=True`), making them useful for a quick shape-trace without cluttering subsequent passes.
 
 ```python
-from pystuff import ShapeHook
+from pyngs import ShapeHook
 import torch
 from torch import nn
 
@@ -186,8 +186,8 @@ ShapeHook for Linear     in shapes: [[1, 8192]]           out shape: [1, 10]
 Not yet on PyPI. Install from source:
 
 ```bash
-git clone https://github.com/jacksalici/pystuff
-cd pystuff
+git clone https://github.com/jacksalici/pyngs
+cd pyngs
 pip install -e .
 ```
 
