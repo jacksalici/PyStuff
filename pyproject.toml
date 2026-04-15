@@ -2,7 +2,7 @@
 name = "pystuff"
 version = "0.1.1"
 description = "A collection of utilities for PyTorch development."
-readme = "README.md"
+readme = "readme.md"
 authors = [
     { name = "Jack Salici", email = "giacomo.salici@unimore.it" }
 ]
