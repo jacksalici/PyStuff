@@ -128,6 +128,7 @@ class Logger:
         info: dict | str,   
         level: Literal["debug", "info", "warning", "error"] = "info",
         step: int | None = None,
+        summary: bool = False,
     ) -> None:
         """
         Send information to the logger.
@@ -152,7 +153,10 @@ class Logger:
         # Case 1: info is a dictionary
         if isinstance(info, dict):
             if self._wandb:
-                self._wandb.log(info)
+                if summary:
+                    self._wandb.summary.update(info)
+                else:
+                    self._wandb.log(info)
 
             if self._tb_writer:
                 # Log each metric to TensorBoard
@@ -235,6 +239,15 @@ class Logger:
                 "Please install PyTorch to use TensorBoard logging."
             )
             self._tb_writer = None
+            
+    def summary(self, info: dict | str) -> None:
+        """
+        Log a summary — routes dicts to wandb.summary and TensorBoard scalars.
+
+        Args:
+            info: A dictionary of metrics or a string message to log as a summary.
+        """
+        self(info, level="info", summary=True)
 
 
 def demo():
