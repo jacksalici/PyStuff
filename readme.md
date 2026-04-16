@@ -1,18 +1,16 @@
-# pyngs 🧰
+# Pyngs 🧰
+> Python Things for easy Python project management.
 
-**A collection of utilities for debugging and developing PyTorch models.**
+**A collection of utilities for managing the configuration, logging, and debugging of Python projects.**
 
-> Not a production library — a personal toolkit that fits my needs. Simpler alternatives exist for each tool, but this keeps everything in one place.
-
-## Tools 🛠️
-
-- [Config ⚙️](#config-️) — singleton config with CLI, YAML, and dot access
-- [Logger 📜](#logger-)
-- [Shape Hooks 🪝](#shape-hooks-) (experimental)
+- [Config 🎛️](#config-️): A singleton configuration manager combining CLI parsing, YAML loading, and attribute-style access. Optional `@Config.configurable` decorator for auto-registering class `__init__` parameters as CLI flags. 
+- [Logger 📠](#logger-): A singleton logging interface that wraps Python's `logging` with optional Weights & Biases and TensorBoard integration.
+- [Shape Hooks 🪝](#shape-hooks-) (🚧 experimental): Attach forward hooks to PyTorch modules to print input/output tensor shapes.
 
 ---
+## Tools
 
-### Config ⚙️
+### Config 🎛️
 
 A **singleton** configuration manager combining **CLI argument parsing** (`argparse`), **YAML loading**, **attribute-style access**, and an optional `@Config.configurable` class decorator.
 
@@ -69,7 +67,7 @@ cfg.save_to_yaml("snapshot.yaml")
 | `cfg.load_from_yaml(path)` | Load from YAML |
 | `Config.reset()` | Reset singleton (tests) |
 
-### Logger 📜
+### Logger 📠
 
 A **singleton** logging interface that combines Python's `logging` with optional **Weights & Biases** and **TensorBoard** integration. Log strings or metric dicts at different severity levels; only messages at or above the configured level reach the console. Calling `Logger()` multiple times returns the same instance.
 
